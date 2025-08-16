@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Container, Typography } from "@mui/material";
 import { supabase } from "@/lib/supabaseClient";
 import BackButton from "@/components/BackButton";
 import ResultTable from "@/components/ResultTable";
 
-type Result = {
+export type Result = {
   id: string;
   nickname: string;
   wpm: number;
@@ -16,17 +17,22 @@ type Result = {
 
 export default function DashboardPage() {
   const [results, setResults] = useState<Result[]>([]);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const sort = searchParams.get("sort") || "created_at";
+  const order = searchParams.get("order") || "desc";
+
+  const fetchResults = async () => {
+    const { data, error } = await supabase
+      .from("results")
+      .select("*")
+      .order(sort, { ascending: order === "asc" });
+
+    if (!error && data) setResults(data);
+  };
 
   useEffect(() => {
-    const fetchResults = async () => {
-      const { data, error } = await supabase
-        .from("results")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (!error && data) setResults(data);
-    };
-
     fetchResults();
 
     const channel = supabase
@@ -47,7 +53,8 @@ export default function DashboardPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [sort, order]);
+
   return (
     <Container maxWidth="md" sx={{ py: 6 }}>
       <Typography variant="h4" align="center" gutterBottom>
