@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Typing Game (Next.js + Supabase + MUI)
 
-## Getting Started
+A real-time multiplayer typing game where users compete live by typing the same sentence. The game tracks each player's WPM (Words Per Minute) and accuracy. Built using:
 
-First, run the development server:
+- **Next.js (App Router)**
+- **Supabase (Database + Realtime)**
+- **Material UI (MUI)**
+
+---
+
+## 🚀 Features
+
+- 🔤 Type a randomly fetched sentence as fast and accurately as possible
+- ⏱ 60-second game timer with live countdown
+- 👥 Real-time table showing other players' progress (WPM + accuracy)
+- 🧠 Local `player_id` stored via `localStorage` to identify users without login
+- 📊 Results are stored in Supabase `results` table after game ends
+- ♻️ Player progress is removed from Supabase after game ends
+
+---
+
+### 1. Install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+
+## 📁 Project Structure
+/components
+├── TypingArea.tsx         // The input + timer area
+├── GameResult.tsx         // Shows final WPM and accuracy
+└── LivePlayersTable.tsx   // Displays other players’ live progress
+
+/lib
+├── supabaseClient.ts      // Supabase client instance
+├── getQuote.ts            // Fetches random quote
+└── savePlayerProgress.ts  // Upserts current player progress to Supabase
+
+/app
+├── page.tsx               // Home page
+└── game/page.tsx          // Main game logic
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ⚙️ Game Logic Overview
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. **Start Game**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- User enters a nickname on the home page.
+- A countdown from 3 starts.
+- A random quote is fetched from [api.quotable.io](https://api.quotable.io/random).
 
-## Learn More
+### 2. **During Game**
 
-To learn more about Next.js, take a look at the following resources:
+- Timer starts (max 60 seconds).
+- Input is tracked.
+- Every **300ms**, the user's current input, WPM, and accuracy are **upserted** into the `player_progress` table.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3. **Live Players Table**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Subscribed to Supabase `player_progress` table via `realtime`.
+- Shows other players typing in the same `round_id` (based on current timestamp).
+- Automatically updates as players type.
 
-## Deploy on Vercel
+### 4. **Game End**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Game ends when the sentence is completed or 60 seconds pass.
+- Final WPM and accuracy are saved to `results` table.
+- Player's row is **removed** from `player_progress` table to clear the live table.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---

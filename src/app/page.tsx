@@ -1,95 +1,97 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Box, Typography, Button, TextField, Stack } from "@mui/material";
+import Link from "next/link";
+import { z } from "zod";
+
+const nicknameSchema = z
+  .string()
+  .min(3, "Nickname must be at least 3 characters.")
+  .max(20, "Nickname must be at most 20 characters.");
+
+export default function HomePage() {
+  const [nickname, setNickname] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  const handleStart = () => {
+    const result = nicknameSchema.safeParse(nickname.trim());
+    if (!result.success) {
+      setError(result.error.issues[0].message);
+      return;
+    }
+
+    setError("");
+    router.push(`/game?nickname=${encodeURIComponent(nickname.trim())}`);
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <Box
+      display="flex"
+      minHeight="100vh"
+      alignItems="center"
+      justifyContent="center"
+      sx={{ backgroundColor: "#fdfaf5" }}
+    >
+      <Stack
+        spacing={3}
+        alignItems="center"
+        width="100%"
+        maxWidth={400}
+        sx={{
+          backgroundColor: "#fff",
+          borderRadius: 2,
+          p: 4,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+        }}
+      >
+        <Typography variant="h4" fontWeight="bold" textAlign="center">
+          Welcome to the Typing Game
+        </Typography>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <TextField
+          fullWidth
+          label="Your Nickname"
+          variant="outlined"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          error={!!error}
+          helperText={error}
+          sx={{ input: { backgroundColor: "#f9f9f9" } }}
+        />
+
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={handleStart}
+          sx={{
+            backgroundColor: "#333",
+            "&:hover": {
+              backgroundColor: "#555",
+            },
+          }}
+        >
+          Start Game
+        </Button>
+
+        <Link href="/dashboard" style={{ textDecoration: "none" }} passHref>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "#5e35b1",
+              mt: 1,
+              cursor: "pointer",
+              "&:hover": {
+                color: "#4527a0",
+              },
+            }}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            View Leaderboard
+          </Typography>
+        </Link>
+      </Stack>
+    </Box>
   );
 }
