@@ -8,6 +8,10 @@ A real-time multiplayer typing game where users compete live by typing the same 
 
 ---
 
+🌐 Live Demo
+
+🔗 https://tonik-app-mu.vercel.app/
+
 ## 🚀 Features
 
 - 🔤 Type a randomly fetched sentence as fast and accurately as possible
