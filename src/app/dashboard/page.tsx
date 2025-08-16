@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Container, Typography } from "@mui/material";
 import { supabase } from "@/lib/supabaseClient";
 import BackButton from "@/components/BackButton";
@@ -18,7 +18,6 @@ export type Result = {
 export default function DashboardPage() {
   const [results, setResults] = useState<Result[]>([]);
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const sort = searchParams.get("sort") || "created_at";
   const order = searchParams.get("order") || "desc";

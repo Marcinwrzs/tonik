@@ -7,6 +7,8 @@ import { supabase } from "@/lib/supabaseClient";
 import TypingArea from "@/components/TypingArea";
 import GameResult from "@/components/GameResult";
 import { getRandomQuote } from "@/lib/getQuote";
+import LivePlayersTable from "@/components/LivePlayersTable";
+import { savePlayerProgress } from "@/lib/savePlayerProgress";
 
 export default function GamePage() {
   const searchParams = useSearchParams();
@@ -28,10 +30,42 @@ export default function GamePage() {
   const roundId = new Date().toISOString().slice(0, 16);
 
   useEffect(() => {
+    if (!isPlaying || !playerId) return;
+
+    const interval = setInterval(async () => {
+      const result = await savePlayerProgress({
+        roundId,
+        playerId,
+        nickname,
+        inputText,
+        sentence,
+        elapsedTime,
+      });
+
+      if (!result.success) {
+        console.error("Upsert failed:", result.error);
+      }
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, [
+    inputText,
+    isPlaying,
+    elapsedTime,
+    playerId,
+    nickname,
+    roundId,
+    sentence,
+  ]);
+  useEffect(() => {
     if (!nickname) router.push("/");
   }, [nickname, router]);
 
   useEffect(() => {
+    getRandomQuote().then((data) => {
+      setSentence(data.quote);
+    });
+
     const storedPlayerId = localStorage.getItem("player_id");
     if (storedPlayerId) {
       setPlayerId(storedPlayerId);
@@ -69,12 +103,6 @@ export default function GamePage() {
     }
   }, [isPlaying, startTime]);
 
-  useEffect(() => {
-    getRandomQuote().then((data) => {
-      setSentence(data.quote);
-    });
-  }, []);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setInputText(value);
@@ -84,7 +112,7 @@ export default function GamePage() {
     }
   };
 
-  const handleEndGame = (finalInput: string = inputText) => {
+  const handleEndGame = async (finalInput: string = inputText) => {
     const finishTime = Date.now();
     const timeTaken = (finishTime - (startTime || finishTime)) / 1000;
     const words = sentence.trim().split(/\s+/).length;
@@ -94,6 +122,11 @@ export default function GamePage() {
       .filter((char, idx) => finalInput[idx] === char).length;
     const accuracy = Math.round((correctChars / sentence.length) * 100);
 
+    await supabase
+      .from("player_progress")
+      .delete()
+      .match({ round_id: roundId, player_id: playerId });
+    setIsPlaying(false);
     setResult({ wpm, accuracy });
     saveResult(wpm, accuracy);
   };
@@ -129,13 +162,16 @@ export default function GamePage() {
       {!isPlaying ? (
         <Typography variant="h3">{countdown}</Typography>
       ) : (
-        <TypingArea
-          sentence={sentence}
-          inputText={inputText}
-          onChange={handleChange}
-          elapsedTime={elapsedTime}
-          onEndGame={() => handleEndGame()}
-        />
+        <>
+          <TypingArea
+            sentence={sentence}
+            inputText={inputText}
+            onChange={handleChange}
+            elapsedTime={elapsedTime}
+            onEndGame={() => handleEndGame()}
+          />
+          <LivePlayersTable roundId={roundId} playerId={playerId} />
+        </>
       )}
     </Box>
   );
