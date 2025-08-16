@@ -1,7 +1,5 @@
-import { Inter } from "next/font/google";
 import "@fontsource/roboto";
-
-const inter = Inter({ subsets: ["latin"] });
+import { CssBaseline, Container } from "@mui/material";
 
 export const metadata = {
   title: "Tonik Game",
@@ -14,8 +12,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.className}>
-      <body></body>
+    <html lang="en">
+      <body style={{ backgroundColor: "#fdfaf5", color: "#1a1a1a", margin: 0 }}>
+        <CssBaseline />
+        <Container maxWidth="md" sx={{ minHeight: "100vh", py: 4 }}>
+          {children}
+        </Container>
+      </body>
     </html>
   );
 }
