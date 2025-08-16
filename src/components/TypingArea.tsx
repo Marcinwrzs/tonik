@@ -23,7 +23,14 @@ export default function TypingArea({
         Time: {elapsedTime}s
       </Typography>
 
-      <Typography variant="h6" maxWidth={600}>
+      <Typography
+        variant="h6"
+        maxWidth={600}
+        sx={{
+          userSelect: "none",
+          pointerEvents: "none",
+        }}
+      >
         {sentence}
       </Typography>
 

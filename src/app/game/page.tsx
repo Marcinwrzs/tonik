@@ -11,6 +11,8 @@ import { getRandomQuote } from "@/lib/getQuote";
 export default function GamePage() {
   const searchParams = useSearchParams();
   const nickname = searchParams.get("nickname") || "";
+  const router = useRouter();
+
   const [sentence, setSentence] = useState("");
   const [countdown, setCountdown] = useState(3);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -22,11 +24,23 @@ export default function GamePage() {
     accuracy: number;
   } | null>(null);
 
-  const router = useRouter();
+  const [playerId, setPlayerId] = useState<string | null>(null);
+  const roundId = new Date().toISOString().slice(0, 16);
 
   useEffect(() => {
     if (!nickname) router.push("/");
   }, [nickname, router]);
+
+  useEffect(() => {
+    const storedPlayerId = localStorage.getItem("player_id");
+    if (storedPlayerId) {
+      setPlayerId(storedPlayerId);
+    } else {
+      const newId = crypto.randomUUID();
+      localStorage.setItem("player_id", newId);
+      setPlayerId(newId);
+    }
+  }, []);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -73,7 +87,7 @@ export default function GamePage() {
   const handleEndGame = (finalInput: string = inputText) => {
     const finishTime = Date.now();
     const timeTaken = (finishTime - (startTime || finishTime)) / 1000;
-    const words = sentence.split(" ").length;
+    const words = sentence.trim().split(/\s+/).length;
     const wpm = Math.round((words / timeTaken) * 60);
     const correctChars = sentence
       .split("")
@@ -85,7 +99,17 @@ export default function GamePage() {
   };
 
   const saveResult = async (wpm: number, accuracy: number) => {
-    await supabase.from("results").insert([{ nickname, wpm, accuracy }]);
+    if (!playerId) return;
+
+    await supabase.from("results").insert([
+      {
+        round_id: roundId,
+        player_id: playerId,
+        nickname,
+        wpm,
+        accuracy,
+      },
+    ]);
   };
 
   if (!sentence) {

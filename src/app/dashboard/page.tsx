@@ -28,8 +28,26 @@ export default function DashboardPage() {
     };
 
     fetchResults();
-  }, []);
 
+    const channel = supabase
+      .channel("realtime:results")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "results",
+        },
+        () => {
+          fetchResults();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
   return (
     <Container maxWidth="md" sx={{ py: 6 }}>
       <Typography variant="h4" align="center" gutterBottom>
