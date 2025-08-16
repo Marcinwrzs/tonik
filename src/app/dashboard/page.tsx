@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Container, Typography } from "@mui/material";
